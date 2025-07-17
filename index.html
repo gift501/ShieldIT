@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShieldIT - Arbitrum Security Toolkit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght=600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js" type="module"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Poppins', sans-serif;
+            color: #1a202c;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #2d3748;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 250px;
+        }
+        .message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .message-box button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            margin-left: 10px;
+            line-height: 1;
+            padding: 0 5px;
+        }
+        .message-box.error {
+            background-color: #ef4444;
+        }
+        .message-box.success {
+            background-color: #22c55e;
+        }
+
+        .loader {
+            border-top-color: #3b82f6;
+            -webkit-animation: spinner 1.2s linear infinite;
+            animation: spinner 1.2s linear infinite;
+        }
+        @-webkit-keyframes spinner {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-primary {
+            @apply bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition duration-300 ease-in-out;
+            @apply hover:from-blue-700 hover:to-indigo-800 hover:shadow-xl;
+            @apply focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2;
+            @apply active:scale-98;
+        }
+        .btn-secondary {
+            @apply bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition duration-300 ease-in-out;
+            @apply hover:from-indigo-700 hover:to-purple-800 hover:shadow-xl;
+            @apply focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:ring-offset-2;
+            @apply active:scale-98;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="messageBox" class="message-box hidden">
+        <span id="messageText"></span>
+        <button id="closeMessageBoxBtn">&#x2715;</button>
+    </div>
+
+    <header class="bg-gradient-to-br from-blue-700 to-indigo-800 text-white py-20 shadow-2xl rounded-b-[40px] md:rounded-b-[80px]">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-6xl md:text-7xl font-extrabold mb-5 tracking-tight drop-shadow-lg">ShieldIT</h1>
+            <p class="text-xl md:text-2xl font-light opacity-90 max-w-4xl mx-auto leading-relaxed">
+                Empowering the Arbitrum community with transparent and secure contract insights. Deploy contracts with the strictest secured methods,
+                Verify, compare, and understand any smart contract with ease.
+            </p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-16 md:py-20">
+        <section class="mb-20 bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
+            <h2 class="text-4xl font-bold text-gray-900 mb-10 text-center">ShieldIT</h2>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div>
+                    <h3 class="text-3xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <span class="text-red-500 mr-4 text-4xl">🎯</span> The Challenge
+                    </h3>
+                    <p class="mb-6 text-gray-700 text-lg leading-relaxed">
+                        In the rapidly evolving world of smart contracts on Arbitrum, critical questions often remain unanswered:
+                    </p>
+                    <ul class="list-disc list-inside space-y-3 text-gray-700 text-lg">
+                        <li>Who truly controls a contract, and can its behavior be changed?</li>
+                        <li>How can one quickly verify the authenticity of a contract amidst a sea of copies and potential fakes?</li>
+                    </ul>
+                    <p class="mt-6 text-gray-700 text-lg leading-relaxed">
+                        Existing tools often require specialized knowledge or lack the direct, on-chain verification capabilities needed for immediate trust and security assessments specifically for Arbitrum.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-3xl font-semibold text-gray-800 mb-6 flex items-center">
+                        <span class="text-green-500 mr-4 text-4xl">💡</span> Our Solution
+                    </h3>
+                    <p class="mb-6 text-gray-700 text-lg leading-relaxed">
+                        ShieldIT provides a suite of intuitive, accessible tools designed to bring clarity and confidence to smart contract interactions on Arbitrum:
+                    </p>
+                    <div class="space-y-8">
+                        <div>
+                            <h4 class="text-2xl font-medium text-gray-800 flex items-center mb-3">
+                                <span class="text-blue-600 mr-3 text-3xl">🛠</span> Permission Scanner
+                            </h4>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Quickly identifies contract ownership and upgradeability status.</li>
+                                <li>Helps users understand who can modify a contract's logic or control its assets.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-2xl font-medium text-gray-800 flex items-center mb-3">
+                                <span class="text-purple-600 mr-3 text-3xl">🧪</span> Bytecode Comparator
+                            </h4>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Compares the underlying code of any two deployed contracts.</li>
+                                <li>Detects subtle differences that could indicate unauthorized changes or malicious copies.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid lg:grid-cols-2 gap-10 mb-20">
+            <div class="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 transform hover:scale-[1.01] transition-transform duration-300 ease-in-out">
+                <h3 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                    <span class="text-blue-600 mr-4 text-4xl">🔐</span> Permission Scanner
+                </h3>
+                <p class="text-gray-700 mb-8 leading-relaxed">
+                    Instantly detect the upgrade and ownership configuration of any deployed contract on Arbitrum One.
+                </p>
+                <div class="mb-6">
+                    <label for="permissionAddress" class="block text-sm font-medium text-gray-700 mb-2">Contract Address</label>
+                    <input type="text" id="permissionAddress" placeholder="e.g., 0x7Fc66500cE..." class="w-full p-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+                </div>
+                <div class="mb-6">
+                    <label for="permissionNetwork" class="block text-sm font-medium text-gray-700 mb-2">Network</label>
+                    <select id="permissionNetwork" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out text-gray-800 shadow-sm">
+                        <option value="arbitrum">Arbitrum One (Public RPC)</option>
+                        <option value="custom">Enter Custom RPC URL</option>
+                    </select>
+                </div>
+                <div id="permissionCustomRpcUrlContainer" class="mb-8 hidden">
+                    <label for="permissionCustomRpcUrl" class="block text-sm font-medium text-gray-700 mb-2">Custom RPC URL</label>
+                    <input type="url" id="permissionCustomRpcUrl" placeholder="e.g., https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+                    <p class="text-xs text-gray-500 mt-2">Use a reliable RPC from services like Alchemy, Infura, or QuickNode for better stability on Arbitrum.</p>
+                </div>
+                <button id="scanPermissionsBtn" class="btn-primary w-full">
+                    Scan Permissions
+                </button>
+                <div id="permissionResults" class="mt-10 p-8 bg-gray-50 rounded-xl border border-gray-200 hidden shadow-inner">
+                    <h4 class="text-xl font-semibold text-gray-800 mb-4">Scan Results:</h4>
+                    <pre class="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-100 p-5 rounded-md border border-gray-200 leading-relaxed"></pre>
+                </div>
+                <div id="permissionLoading" class="mt-6 text-center text-blue-600 hidden">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mb-3 mx-auto"></div>
+                    <p class="text-lg font-medium">Scanning...</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 transform hover:scale-[1.01] transition-transform duration-300 ease-in-out">
+                <h3 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
+                    <span class="text-purple-600 mr-4 text-4xl">🧬</span> Bytecode Comparator
+                </h3>
+                <p class="text-gray-700 mb-8 leading-relaxed">
+                    Analyzes and compares bytecode between any two smart contracts on Arbitrum One to detect clones, tampering, or unsafe alterations.
+                </p>
+                <div class="mb-6">
+                    <label for="bytecodeAddress1" class="block text-sm font-medium text-gray-700 mb-2">Contract Address 1</label>
+                    <input type="text" id="bytecodeAddress1" placeholder="e.g., 0x7Fc66500cE..." class="w-full p-4 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+                </div>
+                <div class="mb-6">
+                    <label for="bytecodeAddress2" class="block text-sm font-medium text-gray-700 mb-2">Contract Address 2</label>
+                    <input type="text" id="bytecodeAddress2" placeholder="e.g., 0xAbcDEf1234..." class="w-full p-4 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+                </div>
+                <div class="mb-6">
+                    <label for="bytecodeNetwork" class="block text-sm font-medium text-gray-700 mb-2">Network</label>
+                    <select id="bytecodeNetwork" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out text-gray-800 shadow-sm">
+                        <option value="arbitrum">Arbitrum One (Public RPC)</option>
+                        <option value="custom">Enter Custom RPC URL</option>
+                    </select>
+                </div>
+                <div id="bytecodeCustomRpcUrlContainer" class="mb-8 hidden">
+                    <label for="bytecodeCustomRpcUrl" class="block text-sm font-medium text-gray-700 mb-2">Custom RPC URL</label>
+                    <input type="url" id="bytecodeCustomRpcUrl" placeholder="e.g., https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+                    <p class="text-xs text-gray-500 mt-2">Use a reliable RPC from services like Alchemy, Infura, or QuickNode for better stability on Arbitrum.</p>
+                </div>
+                <button id="compareBytecodeBtn" class="btn-secondary w-full">
+                    Compare Bytecode
+                </button>
+                <div id="bytecodeResults" class="mt-10 p-8 bg-gray-50 rounded-xl border border-gray-200 hidden shadow-inner">
+                    <h4 class="text-xl font-semibold text-gray-800 mb-4">Comparison Results:</h4>
+                    <pre class="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-100 p-5 rounded-md border border-gray-200 leading-relaxed"></pre>
+                </div>
+                <div id="bytecodeLoading" class="mt-6 text-center text-purple-600 hidden">
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mb-3 mx-auto"></div>
+                    <p class="text-lg font-medium">Comparing...</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-20 bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
+            <h2 class="text-4xl font-bold text-gray-900 mb-10 text-center flex items-center justify-center">
+                <span class="text-green-600 mr-4 text-4xl">📚</span> Contract & Token Information
+            </h2>
+            <p class="text-gray-700 mb-8 text-center leading-relaxed max-w-2xl mx-auto">
+                Get essential on-chain data for any smart contract on Arbitrum. If it's an ERC-20 token, also fetch its price and supply.
+            </p>
+            <div class="mb-6">
+                <label for="contractInfoAddress" class="block text-sm font-medium text-gray-700 mb-2">Contract Address</label>
+                <input type="text" id="contractInfoAddress" placeholder="e.g., 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 (USDC) or 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f (Uniswap V2 Factory)" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+            </div>
+            <div class="mb-6">
+                <label for="contractInfoNetwork" class="block text-sm font-medium text-gray-700 mb-2">Network</label>
+                <select id="contractInfoNetwork" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-200 ease-in-out text-gray-800 shadow-sm">
+                    <option value="arbitrum">Arbitrum One (Public RPC)</option>
+                    <option value="custom">Enter Custom RPC URL</option>
+                </select>
+            </div>
+            <div id="contractInfoCustomRpcUrlContainer" class="mb-8 hidden">
+                <label for="contractInfoCustomRpcUrl" class="block text-sm font-medium text-gray-700 mb-2">Custom RPC URL</label>
+                <input type="url" id="contractInfoCustomRpcUrl" placeholder="e.g., https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+                <p class="text-xs text-gray-500 mt-2">Use a reliable RPC from services like Alchemy, Infura, or QuickNode for better stability on Arbitrum.</p>
+                <div class="mt-4">
+                    <label for="contractInfoCustomNetworkForCoingecko" class="block text-sm font-medium text-gray-700 mb-2">Which network is this custom RPC for? (For CoinGecko Price)</label>
+                    <select id="contractInfoCustomNetworkForCoingecko" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-200 ease-in-out text-gray-800 shadow-sm">
+                        <option value="">Select Network (for price data)</option>
+                        <option value="arbitrum">Arbitrum One</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-2">Required to fetch price data from CoinGecko when using a custom RPC.</p>
+                </div>
+            </div>
+            <button id="getContractInfoBtn" class="bg-gradient-to-r from-green-600 to-teal-700 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition duration-300 ease-in-out hover:from-green-700 hover:to-teal-800 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-green-300 focus:ring-offset-2 active:scale-98 w-full">
+                Get Contract Information
+            </button>
+            <div id="contractInfoResults" class="mt-10 p-8 bg-gray-50 rounded-xl border border-gray-200 hidden shadow-inner">
+                <h4 class="text-xl font-semibold text-gray-800 mb-4">Information:</h4>
+                <pre class="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-100 p-5 rounded-md border border-gray-200 leading-relaxed"></pre>
+            </div>
+            <div id="contractInfoLoading" class="mt-6 text-center text-green-600 hidden">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mb-3 mx-auto"></div>
+                <p class="text-lg font-medium">Fetching contract information...</p>
+            </div>
+        </section>
+
+        <section class="mb-20 bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
+            <h2 class="text-4xl font-bold text-gray-900 mb-10 text-center flex items-center justify-center">
+                <span class="text-red-600 mr-4 text-4xl">🚨</span> Security Insights
+            </h2>
+            <p class="text-gray-700 mb-8 text-center leading-relaxed max-w-2xl mx-auto">
+                Understand potential risks and where to find deeper security analysis for smart contracts on Arbitrum.
+            </p>
+            <div class="mb-6">
+                <label for="securityAddress" class="block text-sm font-medium text-gray-700 mb-2">Contract Address for Security Check</label>
+                <input type="text" id="securityAddress" placeholder="e.g., 0x..." class="w-full p-4 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+            </div>
+            <div class="mb-6">
+                <label for="securityNetwork" class="block text-sm font-medium text-gray-700 mb-2">Network</label>
+                <select id="securityNetwork" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-200 ease-in-out text-gray-800 shadow-sm">
+                    <option value="arbitrum">Arbitrum One (Public RPC)</option>
+                    <option value="custom">Enter Custom RPC URL</option>
+                </select>
+            </div>
+            <div id="securityCustomRpcUrlContainer" class="mb-8 hidden">
+                <label for="securityCustomRpcUrl" class="block text-sm font-medium text-gray-700 mb-2">Custom RPC URL</label>
+                <input type="url" id="securityCustomRpcUrl" placeholder="e.g., https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-200 ease-in-out text-gray-800 placeholder-gray-400 shadow-sm" />
+                <p class="text-xs text-gray-500 mt-2">Use a reliable RPC from services like Alchemy, Infura, or QuickNode for better stability on Arbitrum.</p>
+            </div>
+            <button id="getSecurityInsightsBtn" class="bg-gradient-to-r from-red-600 to-rose-700 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition duration-300 ease-in-out hover:from-red-700 hover:to-rose-800 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-red-300 focus:ring-offset-2 active:scale-98 w-full">
+                Get Security Insights
+            </button>
+            <div id="securityResults" class="mt-10 p-8 bg-gray-50 rounded-xl border border-gray-200 hidden shadow-inner">
+                <h4 class="text-xl font-semibold text-gray-800 mb-4">Insights:</h4>
+                <pre class="whitespace-pre-wrap text-sm text-gray-700 font-mono bg-gray-100 p-5 rounded-md border border-gray-200 leading-relaxed"></pre>
+            </div>
+            <div id="securityLoading" class="mt-6 text-center text-red-600 hidden">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-10 w-10 mb-3 mx-auto"></div>
+                <p class="text-lg font-medium">Analyzing security...</p>
+            </div>
+        </section>
+
+
+        <section class="mb-20">
+            <h2 class="text-4xl font-bold text-gray-900 mb-12 text-center">🚀 Key Features</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 flex items-start space-x-5 transform hover:translate-y-[-5px] transition-transform duration-300 ease-in-out">
+                    <span class="text-blue-600 text-4xl flex-shrink-0">🔐</span>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Permission Scanning (Arbitrum)</h3>
+                        <p class="text-gray-700 leading-relaxed">Exposes administrative roles and potential upgradeability risks instantly on Arbitrum, ensuring full transparency.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 flex items-start space-x-5 transform hover:translate-y-[-5px] transition-transform duration-300 ease-in-out">
+                    <span class="text-purple-600 text-4xl flex-shrink-0">🔁</span>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Bytecode Comparison (Arbitrum)</h3>
+                        <p class="text-gray-700 leading-relaxed">Precisely identifies malicious copies or subtle differences on Arbitrum that other tools might overlook, enhancing security.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 flex items-start space-x-5 transform hover:translate-y-[-5px] transition-transform duration-300 ease-in-out">
+                    <span class="text-green-600 text-4xl flex-shrink-0">🌐</span>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Accessible & Free</h3>
+                        <p class="text-gray-700 leading-relaxed">Designed for immediate use in your browser, providing powerful insights without any cost.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 flex items-start space-x-5 transform hover:translate-y-[-5px] transition-transform duration-300 ease-in-out">
+                    <span class="text-orange-500 text-4xl flex-shrink-0">📖</span>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Community Driven</h3>
+                        <p class="text-gray-700 leading-relaxed">An open-source initiative, fostering collaboration and auditability for the benefit of all.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 flex items-start space-x-5 transform hover:translate-y-[-5px] transition-transform duration-300 ease-in-out">
+                    <span class="text-red-600 text-4xl flex-shrink-0">⚡</span>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Arbitrum Focused</h3>
+                        <p class="text-gray-700 leading-relaxed">Seamlessly functions specifically across Arbitrum and its compatible networks for deep analysis.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 flex items-start space-x-5 transform hover:translate-y-[-5px] transition-transform duration-300 ease-in-out">
+                    <span class="text-teal-600 text-4xl flex-shrink-0">📈</span>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Token Insights (Arbitrum)</h3>
+                        <p class="text-gray-700 leading-relaxed">Provides essential on-chain data and market price for ERC-20 tokens on Arbitrum.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900 text-gray-300 py-12 rounded-t-[40px] md:rounded-t-[80px] shadow-inner">
+        <div class="container mx-auto px-6 text-center">
+            <p class="mb-4 text-lg leading-relaxed max-w-3xl mx-auto">
+                ShieldIT is a lightweight, open-source, Arbitrum dev toolkit focused on transparency,
+                ownership awareness, and security — available to anyone, instantly, and for free.
+            </p>
+            <p class="text-sm text-gray-400 mt-6">
+                &copy; 2025 ShieldIT. All rights reserved. Built with ❤️ for the Arbitrum community.
+            </p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
+
+        window.hideMessageBox = function() {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.classList.remove('show');
+            messageBox.classList.remove('error', 'success', 'info');
+        }
+
+        function showMessageBox(message, type = 'info') {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            messageText.textContent = message;
+            messageBox.className = `message-box show ${type}`;
+            setTimeout(() => {
+                window.hideMessageBox();
+            }, 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const closeBtn = document.getElementById('closeMessageBoxBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', window.hideMessageBox);
+            }
+
+            function setupCustomRpcToggle(networkSelectId, customRpcContainerId, customNetworkForCoingeckoId = null) {
+                document.getElementById(networkSelectId).addEventListener('change', (event) => {
+                    const container = document.getElementById(customRpcContainerId);
+                    const customNetworkSelect = customNetworkForCoingeckoId ? document.getElementById(customNetworkForCoingeckoId) : null;
+                    if (event.target.value === 'custom') {
+                        container.classList.remove('hidden');
+                        if (customNetworkSelect) {
+                            customNetworkSelect.setAttribute('required', 'true');
+                        }
+                    } else {
+                        container.classList.add('hidden');
+                        if (customNetworkSelect) {
+                            customNetworkSelect.removeAttribute('required');
+                        }
+                    }
+                });
+            }
+
+            setupCustomRpcToggle('permissionNetwork', 'permissionCustomRpcUrlContainer');
+            setupCustomRpcToggle('bytecodeNetwork', 'bytecodeCustomRpcUrlContainer');
+            setupCustomRpcToggle('contractInfoNetwork', 'contractInfoCustomRpcUrlContainer', 'contractInfoCustomNetworkForCoingecko');
+            setupCustomRpcToggle('securityNetwork', 'securityCustomRpcUrlContainer');
+        });
+
+        const networkRpcUrls = {
+            arbitrum: 'https://arb1.arbitrum.io/rpc', // Arbitrum One Public RPC
+        };
+
+        document.getElementById('scanPermissionsBtn').addEventListener('click', async () => {
+            const address = document.getElementById('permissionAddress').value.trim();
+            const network = document.getElementById('permissionNetwork').value;
+            const customRpcUrl = document.getElementById('permissionCustomRpcUrl').value.trim();
+            const resultsDiv = document.getElementById('permissionResults');
+            const resultsPre = resultsDiv.querySelector('pre');
+            const loadingDiv = document.getElementById('permissionLoading');
+
+            resultsDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            resultsPre.textContent = '';
+            window.hideMessageBox();
+
+            if (!address) {
+                showMessageBox('Please enter a contract address.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            if (!ethers.isAddress(address)) {
+                showMessageBox('Invalid contract address format.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            let rpcUrl;
+            if (network === 'custom') {
+                if (!customRpcUrl) {
+                    showMessageBox('Please enter a custom RPC URL.', 'error');
+                    loadingDiv.classList.add('hidden');
+                    return;
+                }
+                rpcUrl = customRpcUrl;
+            } else {
+                rpcUrl = networkRpcUrls[network];
+            }
+
+            if (!rpcUrl) {
+                showMessageBox('RPC URL not configured for the selected network.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const provider = new ethers.JsonRpcProvider(rpcUrl);
+                const code = await provider.getCode(address);
+
+                if (code === '0x') {
+                    resultsPre.textContent = 'No contract found at this address.';
+                    resultsDiv.classList.remove('hidden');
+                    showMessageBox('No contract found at this address.', 'info');
+                    return;
+                }
+
+                let resultText = `Contract Address: ${address}\nNetwork: ${network === 'custom' ? `Custom (${rpcUrl})` : 'Arbitrum One'}\n\n`;
+
+                resultText += "--- Basic Permission Insights ---\n";
+                resultText += "Disclaimer: Comprehensive permission scanning requires source code analysis and is beyond the scope of this basic demo. This tool provides preliminary on-chain checks.\n\n";
+
+                const ERC1967_PROXY_STORAGE_SLOT = '0x360894a13ba1a3210667c828492db98dca3ad923a232230491e0ac244d3f044d';
+                const UUPS_BEACON_STORAGE_SLOT = '0xa3f0ad80bb426978d52367c7e39097e14a2f8c5b969188f72362a265f2122619';
+
+                let isProxy = false;
+                try {
+                    const implementationAddress = await provider.getStorage(address, ERC1967_PROXY_STORAGE_SLOT);
+                    if (ethers.toBigInt(implementationAddress) !== 0n) {
+                        resultText += `Potential Proxy Contract (ERC-1967 style). Implementation at: ${ethers.AbiCoder.defaultAbiCoder().decode(['address'], implementationAddress)[0]}\n`;
+                        isProxy = true;
+                    }
+                } catch (error) {
+                }
+
+                if (!isProxy) {
+                    try {
+                        const beaconAddress = await provider.getStorage(address, UUPS_BEACON_STORAGE_SLOT);
+                        if (ethers.toBigInt(beaconAddress) !== 0n) {
+                            resultText += `Potential UUPS Proxy Contract (Beacon Proxy). Beacon at: ${ethers.AbiCoder.defaultAbiCoder().decode(['address'], beaconAddress)[0]}\n`;
+                            isProxy = true;
+                        }
+                    } catch (error) {
+                    }
+                }
+
+                if (!isProxy) {
+                    resultText += "Contract does not appear to be a common proxy (ERC-1967 or UUPS) based on storage slots. It might be a regular contract or a different proxy pattern.\n";
+                } else {
+                    resultText += "Proxy contracts can have their logic upgraded. Further analysis of the proxy's owner/admin is needed to understand upgradeability permissions.\n";
+                }
+
+                const ownerAbi = ["function owner() view returns (address)"];
+                const adminAbi = ["function admin() view returns (address)"];
+                const contract = new ethers.Contract(address, [], provider);
+
+                try {
+                    const ownerFunction = new ethers.Contract(address, ownerAbi, provider);
+                    const owner = await ownerFunction.owner();
+                    if (owner && owner !== ethers.ZeroAddress) {
+                        resultText += `\n'owner()' function detected. Current Owner: ${owner}\n`;
+                    }
+                } catch (e) {
+                    resultText += "\n'owner()' function not found or not callable.\n";
+                }
+
+                try {
+                    const adminFunction = new ethers.Contract(address, adminAbi, provider);
+                    const admin = await adminFunction.admin();
+                    if (admin && admin !== ethers.ZeroAddress) {
+                        resultText += `'admin()' function detected. Current Admin: ${admin}\n`;
+                    }
+                } catch (e) {
+                    resultText += "'admin()' function not found or not callable.\n";
+                }
+
+                resultsPre.textContent = resultText;
+                resultsDiv.classList.remove('hidden');
+                showMessageBox('Permission scan complete!', 'success');
+
+            } catch (error) {
+                console.error("Permission scan error:", error);
+                resultsPre.textContent = `Error: ${error.message || 'An unknown error occurred during scan.'}`;
+                resultsDiv.classList.remove('hidden');
+                showMessageBox(`Error scanning permissions: ${error.message || 'Please check address and network.'}`, 'error');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('compareBytecodeBtn').addEventListener('click', async () => {
+            const address1 = document.getElementById('bytecodeAddress1').value.trim();
+            const address2 = document.getElementById('bytecodeAddress2').value.trim();
+            const network = document.getElementById('bytecodeNetwork').value;
+            const customRpcUrl = document.getElementById('bytecodeCustomRpcUrl').value.trim();
+            const resultsDiv = document.getElementById('bytecodeResults');
+            const resultsPre = resultsDiv.querySelector('pre');
+            const loadingDiv = document.getElementById('bytecodeLoading');
+
+            resultsDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            resultsPre.textContent = '';
+            window.hideMessageBox();
+
+            if (!address1 || !address2) {
+                showMessageBox('Please enter both contract addresses for comparison.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            if (!ethers.isAddress(address1) || !ethers.isAddress(address2)) {
+                showMessageBox('Invalid contract address format for one or both addresses.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            let rpcUrl;
+            if (network === 'custom') {
+                if (!customRpcUrl) {
+                    showMessageBox('Please enter a custom RPC URL.', 'error');
+                    loadingDiv.classList.add('hidden');
+                    return;
+                }
+                rpcUrl = customRpcUrl;
+            } else {
+                rpcUrl = networkRpcUrls[network];
+            }
+
+            if (!rpcUrl) {
+                showMessageBox('RPC URL not configured for the selected network.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+                const [code1, code2] = await Promise.all([
+                    provider.getCode(address1),
+                    provider.getCode(address2)
+                ]);
+
+                let resultText = `Network: ${network === 'custom' ? `Custom (${rpcUrl})` : 'Arbitrum One'}\n\n`;
+                resultText += `Contract 1 (${address1}) Code Length: ${code1.length}\n`;
+                resultText += `Contract 2 (${address2}) Code Length: ${code2.length}\n\n`;
+
+                if (code1 === '0x' || code2 === '0x') {
+                    resultText += "One or both addresses do not contain deployed contract code.\n";
+                    if (code1 === '0x') resultText += `Note: No contract found at address 1 (${address1})\n`;
+                    if (code2 === '0x') resultText += `Note: No contract found at address 2 (${address2})\n`;
+                    resultsPre.textContent = resultText;
+                    resultsDiv.classList.remove('hidden');
+                    showMessageBox('One or both addresses do not contain contract code.', 'info');
+                    return;
+                }
+
+                if (code1 === code2) {
+                    resultText += "Result: The bytecode of both contracts is IDENTICAL. They are exact clones.\n";
+                    showMessageBox('Bytecode is identical!', 'success');
+                } else {
+                    resultText += "Result: The bytecode of the two contracts is DIFFERENT. They are not exact clones.\n";
+                    showMessageBox('Bytecode is different.', 'info');
+                }
+
+                resultsPre.textContent = resultText;
+                resultsDiv.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Bytecode comparison error:", error);
+                resultsPre.textContent = `Error: ${error.message || 'An unknown error occurred during comparison.'}`;
+                resultsDiv.classList.remove('hidden');
+                showMessageBox(`Error comparing bytecode: ${error.message || 'Please check addresses and network.'}`, 'error');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('getContractInfoBtn').addEventListener('click', async () => {
+            const address = document.getElementById('contractInfoAddress').value.trim();
+            const network = document.getElementById('contractInfoNetwork').value;
+            const customRpcUrl = document.getElementById('contractInfoCustomRpcUrl').value.trim();
+            const customNetworkForCoingecko = document.getElementById('contractInfoCustomNetworkForCoingecko').value;
+            const resultsDiv = document.getElementById('contractInfoResults');
+            const resultsPre = resultsDiv.querySelector('pre');
+            const loadingDiv = document.getElementById('contractInfoLoading');
+
+            resultsDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            resultsPre.textContent = '';
+            window.hideMessageBox();
+
+            if (!address) {
+                showMessageBox('Please enter a contract address.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            if (!ethers.isAddress(address)) {
+                showMessageBox('Invalid contract address format.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            let rpcUrl;
+            let coingeckoNetworkId = '';
+
+            if (network === 'custom') {
+                if (!customRpcUrl) {
+                    showMessageBox('Please enter a custom RPC URL.', 'error');
+                    loadingDiv.classList.add('hidden');
+                    return;
+                }
+                if (!customNetworkForCoingecko) {
+                    showMessageBox('Please select a network for CoinGecko price data when using a custom RPC.', 'error');
+                    loadingDiv.classList.add('hidden');
+                    return;
+                }
+                rpcUrl = customRpcUrl;
+                coingeckoNetworkId = customNetworkForCoingecko;
+            } else {
+                rpcUrl = networkRpcUrls[network];
+                if (network === 'arbitrum') {
+                    coingeckoNetworkId = 'arbitrum-one';
+                }
+            }
+
+            if (!rpcUrl) {
+                showMessageBox('RPC URL not configured for the selected network.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const provider = new ethers.JsonRpcProvider(rpcUrl);
+                const code = await provider.getCode(address);
+
+                if (code === '0x') {
+                    resultsPre.textContent = 'No contract found at this address.';
+                    resultsDiv.classList.remove('hidden');
+                    showMessageBox('No contract found at this address.', 'info');
+                    return;
+                }
+
+                let resultText = `Contract Address: ${address}\nNetwork: ${network === 'custom' ? `Custom (${rpcUrl})` : 'Arbitrum One'}\n\n`;
+
+                const erc20Abi = [
+                    "function name() view returns (string)",
+                    "function symbol() view returns (string)",
+                    "function decimals() view returns (uint8)",
+                    "function totalSupply() view returns (uint256)",
+                ];
+                const contract = new ethers.Contract(address, erc20Abi, provider);
+
+                let isERC20 = false;
+                try {
+                    const name = await contract.name();
+                    const symbol = await contract.symbol();
+                    const decimals = await contract.decimals();
+                    const totalSupply = await contract.totalSupply();
+
+                    resultText += "--- ERC-20 Token Information ---\n";
+                    resultText += `Name: ${name}\n`;
+                    resultText += `Symbol: ${symbol}\n`;
+                    resultText += `Decimals: ${decimals}\n`;
+                    resultText += `Total Supply: ${ethers.formatUnits(totalSupply, decimals)}\n`;
+                    isERC20 = true;
+                } catch (e) {
+                    resultText += "This does not appear to be a standard ERC-20 token (missing name, symbol, decimals, or totalSupply functions).\n";
+                }
+
+                if (isERC20 && coingeckoNetworkId) {
+                    try {
+                        const coingeckoUrl = `https://api.coingecko.com/api/v3/simple/token_price/${coingeckoNetworkId}?contract_addresses=${address}&vs_currencies=usd`;
+                        const response = await fetch(coingeckoUrl);
+                        const data = await response.json();
+
+                        if (data[address.toLowerCase()] && data[address.toLowerCase()].usd) {
+                            resultText += `\nPrice (USD): $${data[address.toLowerCase()].usd}\n`;
+                        } else {
+                            resultText += "\nPrice data not available on CoinGecko for this token.\n";
+                        }
+                    } catch (error) {
+                        resultText += `\nError fetching price from CoinGecko: ${error.message || 'Check network compatibility or API issues.'}\n`;
+                    }
+                } else if (isERC20) {
+                    resultText += "\nPrice data from CoinGecko is only available for known networks.\n";
+                }
+
+                resultsPre.textContent = resultText;
+                resultsDiv.classList.remove('hidden');
+                showMessageBox('Contract information fetched!', 'success');
+
+            } catch (error) {
+                console.error("Contract info error:", error);
+                resultsPre.textContent = `Error: ${error.message || 'An unknown error occurred during information retrieval.'}`;
+                resultsDiv.classList.remove('hidden');
+                showMessageBox(`Error fetching contract info: ${error.message || 'Please check address and network.'}`, 'error');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('getSecurityInsightsBtn').addEventListener('click', async () => {
+            const address = document.getElementById('securityAddress').value.trim();
+            const network = document.getElementById('securityNetwork').value;
+            const customRpcUrl = document.getElementById('securityCustomRpcUrl').value.trim();
+            const resultsDiv = document.getElementById('securityResults');
+            const resultsPre = resultsDiv.querySelector('pre');
+            const loadingDiv = document.getElementById('securityLoading');
+
+            resultsDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            resultsPre.textContent = '';
+            window.hideMessageBox();
+
+            if (!address) {
+                showMessageBox('Please enter a contract address for security insights.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            if (!ethers.isAddress(address)) {
+                showMessageBox('Invalid contract address format.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            let rpcUrl;
+            if (network === 'custom') {
+                if (!customRpcUrl) {
+                    showMessageBox('Please enter a custom RPC URL.', 'error');
+                    loadingDiv.classList.add('hidden');
+                    return;
+                }
+                rpcUrl = customRpcUrl;
+            } else {
+                rpcUrl = networkRpcUrls[network];
+            }
+
+            if (!rpcUrl) {
+                showMessageBox('RPC URL not configured for the selected network.', 'error');
+                loadingDiv.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const provider = new ethers.JsonRpcProvider(rpcUrl);
+                const code = await provider.getCode(address);
+
+                if (code === '0x') {
+                    resultsPre.textContent = 'No contract found at this address.';
+                    resultsDiv.classList.remove('hidden');
+                    showMessageBox('No contract found at this address.', 'info');
+                    return;
+                }
+
+                let resultText = `Contract Address: ${address}\nNetwork: ${network === 'custom' ? `Custom (${rpcUrl})` : 'Arbitrum One'}\n\n`;
+
+                resultText += "--- Arbitrum Security Insights (Under Development) ---\n";
+                resultText += "This section will provide advanced security analysis for contracts on Arbitrum One.\n\n";
+                resultText += "Current placeholder insights:\n";
+                resultText += "- **Honeypot Detection:** (Future: Analyze `transfer` and `transferFrom` overrides, `_approve` modifications, buy/sell restrictions)\n";
+                resultText += "- **Public Mint Warning:** (Future: Check for `mint` functions without access control)\n";
+                resultText += "- **Owner Blacklist Abuse:** (Future: Detect owner-controlled blacklisting functions)\n";
+                resultText += "- **Tax Manipulation:** (Future: Identify functions allowing owner to arbitrarily set high taxes)\n";
+                resultText += "- **LP Pull Traps:** (Future: Analyze liquidity pair functions for common rug patterns)\n";
+                resultText += "- **Rug Upgrade Paths:** (Future: Check proxy patterns for easy rug upgrades via EOA owner)\n";
+                resultText += "- **Delegated Rug Logic:** (Future: Look for `delegatecall` to externally controlled addresses)\n";
+                resultText += "- **Anti-Sell Protections:** (Future: Analyze transfer logic for common anti-sell mechanisms)\n\n";
+                resultText += "For now, consider the basic permission and bytecode comparison tools for initial checks. Refer to external security audit platforms for comprehensive analysis.\n";
+
+                resultsPre.textContent = resultText;
+                resultsDiv.classList.remove('hidden');
+                showMessageBox('Security insights are a future feature!', 'info');
+
+            } catch (error) {
+                console.error("Security insights error:", error);
+                resultsPre.textContent = `Error: ${error.message || 'An unknown error occurred during security analysis.'}`;
+                resultsDiv.classList.remove('hidden');
+                showMessageBox(`Error getting security insights: ${error.message || 'Please check address and network.'}`, 'error');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        });
+
+    </script>
+</body>
+</html>
