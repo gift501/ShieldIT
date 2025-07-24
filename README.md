@@ -1,4 +1,6 @@
 ShieldIT: A New Shield for Arbitrum's Future
+
+
 The Secure Compiler & Deployment Firewall for Arbitrum
 ShieldIT is an open-source, free-to-use platform designed to fundamentally change smart contract security. It is a proactive defense system that empowers both developers and users to detect malicious smart contracts and prevent dangerous code from ever reaching the blockchain.
 
