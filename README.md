@@ -58,14 +58,23 @@ Enhanced Security Features for Public Explorers
 This project will also help in integrating advanced security features directly into the ShieldIT public explorer for Arbitrum, providing immediate, actionable insights:
 
 Feature	Purpose
+
 ❌ Honeypot Detection	Detects "buy-only" or sell-blocking logic that traps users.
+
 ❌ Public Mint Warning	Flags unrestricted token inflation, protecting against rugpulls.
+
 ❌ Owner Blacklist Abuse	Uncovers backdoor blacklisting capabilities.
+
 ❌ Tax Manipulation	Warns if the owner can set excessively high transaction fees.
+
 ❌ LP Pull Traps	Identifies faulty LP lock functions that don't truly lock.
+
 ❌ Rug Upgrade Paths	Detects upgradeTo() coupled with an EOA owner, indicating a rug trap.
+
 ❌ Delegated Rug Logic	Flags delegatecall with external, potentially malicious control.
+
 ❌ Anti-Sell Protections	Identifies logic designed to block legitimate users from exiting.
+
 Crucially, all these checks will run automatically during ShieldIT compilation, actively preventing dangerous contracts from ever deploying.
 
 Additional Features
@@ -73,9 +82,15 @@ Beyond pre-deployment security, ShieldIT will offer comprehensive post-deploymen
 
 Feature	Description
 Top 1000 Holders Tracking	Detects significant wallet concentration or potential team dumping.
+
 Owner Wallet Link Analysis	Traces if the contract owner is linked to other known scams.
+
 Suspicious Transaction Detector	Analyzes transaction patterns for dumps, spam, and rugpull attempts.
+
 Auto Unit Test Generator	Automatically creates test/.js files based on contract logic, simplifying testing.
+
 Auto Audit Report Generator	Exports comprehensive risk analyses, source code, and bytecode into PDF reports.
+
 Contract Diff & Audit History	Compares logic changes between contract versions (e.g., V1 → V2) before upgrades.
+
 Storage Layout Safety	Prevents critical bugs and vulnerabilities during proxy upgrades.
